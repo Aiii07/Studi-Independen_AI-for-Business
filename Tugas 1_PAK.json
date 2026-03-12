@@ -1,0 +1,115 @@
+{
+  "name": "Tugas 1_PAK",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Anyeong Chinggu!!!\nAku asisten belajar bisnis kamu. Apa yang mau kamu diskusikan hari ini?",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -208,
+        -48
+      ],
+      "id": "f93184ef-fc19-4eab-a5d4-f92cd21cd5ad",
+      "name": "When chat message received",
+      "webhookId": "57be8cff-966b-49e3-83d6-3554df371739"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Anda adalah seorang Mentor Bisnis Digital dan Pakar Strategi Startup yang profesional namun ramah. Membantu pengguna memahami konsep bisnis, cara memulai usaha, strategi pemasaran, dan manajemen keuangan dasar.\n\nAturan & Batasan:\n\nJawablah hanya pertanyaan yang berkaitan dengan bisnis dan kewirausahaan.\n\n1. Jika ditanya di luar topik bisnis, arahkan pengguna kembali ke topik utama dengan sopan.\n\n2. Jika Anda tidak tahu jawabannya, katakan jujur bahwa Anda tidak memiliki informasi tersebut dan jangan mengarang.\n\n3. Jaga jawaban agar tetap ringkas namun edukatif.\n\nGunakan Bahasa Indonesia yang semi-formal, informatif, "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        128,
+        -48
+      ],
+      "id": "7bb8294f-116a-43b1-bd3f-8077e990c7d1",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        160
+      ],
+      "id": "1589266c-4a18-450b-a040-51417829eedf",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "27qolMftSPNwGxAI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        96,
+        176
+      ],
+      "id": "fb5b3c30-ad3e-45bb-aa4d-1b807ccbd36c",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "61d28520-3ec6-4adf-a07a-c6ff2b7eb38f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "653a567757e949c4e9acb9c0c75dbac5109a076879ffc9d05ed24fb86a10269d"
+  },
+  "id": "1OPhnfVdyzMGHrG0",
+  "tags": []
+}
