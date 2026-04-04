@@ -1,0 +1,332 @@
+{
+  "name": "AI Image Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.api_key }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"grok-imagine/text-to-image\",\n  \"input\": {\n    \"prompt\": \"{{ $json.prompt }}\",\n    \"aspect_ratio\": \"3:2\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -688,
+        -720
+      ],
+      "id": "a00bb518-f46a-4bd1-ae41-389789e2bb3b",
+      "name": "Mengirim Image",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -416,
+        -720
+      ],
+      "id": "7c002f7c-77bf-4460-ba06-e65c4347f1da",
+      "name": "Menunggu Proses",
+      "webhookId": "8034c54f-33d6-4dec-8c59-33fc628cb44c"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.kie.ai/api/v1/jobs/recordInfo",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $json.data.taskId }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $node[\"Submit Text Prompt\"].json[\"api_key\"] }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -112,
+        -720
+      ],
+      "id": "ff12ae63-9413-42f9-bfb6-d3586e636042",
+      "name": "Mendapatkan Status"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9db92df2-0915-45de-8e17-dda00209bc78",
+              "leftValue": "success",
+              "rightValue": "={{ $json.data.state }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        -720
+      ],
+      "id": "e3d985f9-f787-486d-a97d-e02ca0143e74",
+      "name": "Check Jika Sudah Selesai"
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = JSON.parse($json.data.resultJson);\n\nreturn [{\n  img1: result.resultUrls[0] || null,\n  img2: result.resultUrls[1] || null,\n  img3: result.resultUrls[2] || null,\n  img4: result.resultUrls[3] || null\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -976,
+        -336
+      ],
+      "id": "733e4f63-d2e5-497f-a23d-8d9f607ef441",
+      "name": "Format Result"
+    },
+    {
+      "parameters": {
+        "jsCode": "const urls = [\n  $json.img1,\n  $json.img2,\n  $json.img3,\n  $json.img4\n].filter(Boolean);\n\n// jadikan 1 URL = 1 item\nreturn urls.map((url, index) => ({\n  json: {\n    url,\n    index: index + 1\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        -336
+      ],
+      "id": "1e5678e6-5e1c-4f81-8367-86150f5e90eb",
+      "name": "Loop Image"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -480,
+        -336
+      ],
+      "id": "ce4c33c4-32a9-4875-b137-2ffa7a6b0b7f",
+      "name": "Download Gambar"
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "5236753108",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        -336
+      ],
+      "id": "76488752-4b2e-494c-a248-a5500f785851",
+      "name": "Kirim Hasil Generate",
+      "webhookId": "967a5e62-9d62-43e5-aeeb-9c2ea07994f1",
+      "credentials": {
+        "telegramApi": {
+          "id": "3icByk6EDdmxscLt",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Generate Gambar Konten Otomatis",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "prompt",
+              "fieldName": "prompt"
+            },
+            {
+              "fieldLabel": "task_type",
+              "fieldName": "task_type",
+              "placeholder": "mj_txt2img"
+            },
+            {
+              "fieldLabel": "api_key",
+              "fieldName": "api_key"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -960,
+        -720
+      ],
+      "id": "9b8a690e-2709-4dda-aabe-ae02a90cea35",
+      "name": "Submit Text Prompt",
+      "webhookId": "22e3ea58-f31c-4034-82f0-253a88725782"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Mengirim Image": {
+      "main": [
+        [
+          {
+            "node": "Menunggu Proses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Menunggu Proses": {
+      "main": [
+        [
+          {
+            "node": "Mendapatkan Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mendapatkan Status": {
+      "main": [
+        [
+          {
+            "node": "Check Jika Sudah Selesai",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Jika Sudah Selesai": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Menunggu Proses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Result": {
+      "main": [
+        [
+          {
+            "node": "Loop Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Image": {
+      "main": [
+        [
+          {
+            "node": "Download Gambar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Gambar": {
+      "main": [
+        [
+          {
+            "node": "Kirim Hasil Generate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Text Prompt": {
+      "main": [
+        [
+          {
+            "node": "Mengirim Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5437ab71-47ac-43db-a54d-2e503f93aab2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "10d469df2fedb9163672ee5f517014ef276053389000881ecb7e96a36f121653"
+  },
+  "id": "m66DhBRpn7HNE7Gj",
+  "tags": []
+}
